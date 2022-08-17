@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express from "express";
 import App from './services/ExpressApp';
 import dbConnection from './services/Database';

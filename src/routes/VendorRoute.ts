@@ -5,27 +5,32 @@ import { Authenticate } from '../middleware';
 
 const router = express.Router();
 
-const imageStorage = multer.diskStorage({
-	destination: function(req, file, cb){
-		cb(null, 'src/images/')
-	},
-	filename: function(req, file, cb){
-		cb(null, new Date().toISOString().replace(/:/g, '-')+'_'+file.originalname)
+const storage = multer.diskStorage({});
+
+const fileFilter = (_req: any, file: any, cb: any) => {
+	if(file.mimetype === 'image/png' || file.mimetype === 'image/jpg' ||
+	file.mimetype === 'image/jpeg' || file.mimetype === 'image/webp'){
+		cb(null, true)
 	}
+	else{
+		cb({ msg: "Unsupported File Format"}, false)
+	}
+}
+
+let upload = multer({
+	storage,
+	fileFilter: fileFilter
 })
-
-const images = multer({storage: imageStorage}).array('images', 10)
-
 
 router.post('/login', VendorLogin);
 
 router.use(Authenticate);
 router.get('/profile', GetVendorProfile);
 router.patch('/profile', UpdateVendorProfile);
-router.patch('/coverimage', images, UpdateVendorCoverImage);
+router.patch('/coverimage', upload.single('images'), UpdateVendorCoverImage);
 router.patch('/service', UpdateVendorService);
 
-router.post('/food', images, AddFood);
+router.post('/food', upload.array('images', 10), AddFood);
 router.get('/foods', GetFoods);
 
 export { router as VendorRoute};

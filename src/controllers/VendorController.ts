@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import { CreateFoodInputs, EditVendorInputs, VendorLoginInput } from "../dto";
+import { CreateFoodInputs, EditVendorInputs, simple_array, VendorLoginInput } from "../dto";
 import { Food } from "../models";
 import { GenerateSignature, ValidatePassword } from "../utility";
+import cloudinary from "../utility/cloudinary";
+import { UploadApiResponse } from 'cloudinary';
 import { FindVendor } from "./AdminController";
 
 export const VendorLogin = async (req:Request, res: Response, next: NextFunction) => {
@@ -88,14 +90,31 @@ export const UpdateVendorCoverImage = async (req:Request, res: Response, next: N
 		const vendor = await FindVendor(user._id);
 
 		if(vendor !== null){
-			const files = req.files as [Express.Multer.File]
-			const images = files.map((file: Express.Multer.File) => file.filename);
+			if(vendor.public_id){
+				await cloudinary.uploader.destroy(vendor.public_id);
+			}
 
-			vendor.coverImage.push(...images);
+			if(!req.file) return res.json({ msg: "You must need to upload a file" })
 
-			const result = await vendor.save();
+			let uploadedFile: UploadApiResponse;
 
-			return res.json(result);
+			try {
+				uploadedFile = await cloudinary.uploader.upload(req.file.path, {
+					folder: "Faco/Vendors",
+					mediaType: "image"
+				})
+			} catch (error) {
+				return res.json({ msg: error.message })
+			}
+
+			const { secure_url, public_id } = uploadedFile;
+
+			vendor.coverImage = secure_url;
+			vendor.public_id = public_id;
+
+			const saveResult = await vendor.save();
+            
+            return res.json(saveResult);
 		}
 	}
 
@@ -111,9 +130,20 @@ export const AddFood = async (req:Request, res: Response, next: NextFunction) =>
 		const vendor = await FindVendor(user._id);
 
 		if(vendor !== null){
-			const files = req.files as [Express.Multer.File]
-			const images = files.map((file: Express.Multer.File) => file.filename);
+			const files = <simple_array[]>req.files;
+			if(!files) return res.json({ msg: "You must need to upload at least one file" })
 
+			let images = []
+			for (var i = 0; i < req.files.length; i++) {
+				var FilePath = req.files[i].path;
+	  
+				var image = await cloudinary.uploader.upload(FilePath, {
+					folder: "Faco/Foods",
+					mediaType: "image"
+				});
+				images.push(image.secure_url)
+			}
+			
 			const createFood = await Food.create({
 				vendorId: vendor._id,
 				name: name,

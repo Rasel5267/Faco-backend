@@ -36,7 +36,8 @@ export const CreateVendor = async (req:Request, res: Response, next: NextFunctio
 		password: userPassword,
 		salt: salt,
 		serviceAvailable: false,
-		coverImage: [],
+		coverImage: '',
+		public_id: '',
 		rating: 0,
 		foods: []
 	})
