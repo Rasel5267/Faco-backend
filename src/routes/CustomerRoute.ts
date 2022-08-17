@@ -18,6 +18,8 @@ router.get('/profile', GetCustomerProfile);
 
 router.patch('/profile', EditCustomerProfile);
 
+// router.delete('/delete', DeleteCustomerProfile);
+
 
 // cart
 

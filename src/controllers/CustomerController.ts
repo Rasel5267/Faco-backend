@@ -171,3 +171,14 @@ export const EditCustomerProfile = async(req: Request, res: Response, next: Next
     }
     return res.status(400).json({ msg: 'Error while Updating Profile'});
 }
+
+// export const DeleteCustomerProfile = async(req: Request, res: Response, next: NextFunction) => {
+//     const customer = req.user;
+ 
+//     if(customer){
+        
+//         await Customer.findByIdAndDelete(customer._id);
+//         res.json({ msg : "Deleted Success!" });
+//     }
+//     return res.status(400).json({ msg: 'Error while deleting Profile'})
+// }
