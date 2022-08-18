@@ -1,5 +1,5 @@
 export const APP_SECRET = 'w59ChnxwqSms0WRYl&6eq9TOvNgdWdc!55bG#Rdq49@JbBUu9w'
-export const MONGO_URI = 'mongodb+srv://admin:admin@cluster0.hk3oj.mongodb.net/faco?retryWrites=true&w=majority'
+export const MONGO_URI = 'mongodb+srv://admin:admin@cluster0.hk3oj.mongodb.net/faco-food?retryWrites=true&w=majority'
 
 export const PORT = process.env.PORT || 8000
 export const SENDER_EMAIL = 'mahadiul09@gmail.com'
