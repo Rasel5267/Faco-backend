@@ -12,7 +12,7 @@ const StartServer = async () => {
 
 	app.listen(PORT || 8000, () => {
 		console.clear();
-		console.log(`App is listening on port ${PORT}`);
+		console.log(`App is listening on heroku port ${PORT}`);
 	})
 }
 
