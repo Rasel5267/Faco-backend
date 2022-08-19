@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { plainToClass } from "class-transformer";
-import { CreateCustomerInputs, UserLoginInputs, EditCustomerProfileInput, OrderInputs } from "../dto";
+import { CreateCustomerInputs, UserLoginInputs, EditCustomerProfileInput, CartItem } from "../dto";
 import { validate } from "class-validator";
 import {  GeneratePassword, GenerateSalt, GenerateSignature, onRequestOTP, GenerateOtp, ValidatePassword } from "../utility";
 import { Customer, Food, Order } from "../models";
@@ -74,8 +74,12 @@ export const CustomerLogin = async(req: Request, res: Response, next: NextFuncti
 
     const { email, password } = customerInputs;
     const customer = await Customer.findOne({ email: email});
+
+    if(!customer) return res.status(400).json({ msg: 'Customer does not exist' });
+
     if(customer){
         const validation = await ValidatePassword(password, customer.password, customer.salt);
+        if(!validation) return res.status(400).json({ msg: 'Password does not match' });
         
         if(validation){
 
@@ -181,18 +185,19 @@ export const CreateOrder = async(req: Request, res: Response, next: NextFunction
 
         const profile = await Customer.findById(customer._id);
 
-        const cart = <[OrderInputs]>req.body;
+        const cart = <[CartItem]>req.body;
 
         let cartItems = Array();
+
         let netAmount = 0.0;
 
         const foods = await Food.find().where('_id').in(cart.map(item => item._id)).exec();
 
         foods.map(food => {
-            cart.map(({_id, unit}) => {
-                if(food._id === _id){
+            cart.map(({ _id, unit}) => {
+                if(food._id == _id){
                     netAmount += (food.price * unit);
-                    cartItems.push({ food, unit })
+                    cartItems.push({ food, unit})
                 }
             })
         })
@@ -202,16 +207,17 @@ export const CreateOrder = async(req: Request, res: Response, next: NextFunction
                 orderId: orderId,
                 items: cartItems,
                 totalAmount: netAmount,
+                orderDate: new Date(),
                 paidThrough: 'COD',
                 paymentResponse: '',
-                orderStatus: 'Pending'
+                orderStatus: 'Pending',
             })
 
             if(currentOrder){
                 profile.orders.push(currentOrder);
-                const profileResponse = await profile.save();
+                await profile.save();
 
-                return res.status(200).json(profileResponse);
+                return res.status(200).json(currentOrder);
             }
         }
         
@@ -223,18 +229,20 @@ export const GetOrders = async(req: Request, res: Response, next: NextFunction) 
     const customer = req.user;
  
     if(customer){
-        
-        
+        const profile = await Customer.findById(customer._id).populate('orders');
+        if(profile){
+            return res.status(200).json(profile.orders);
+        }
     }
-    return res.status(400).json({ msg: 'Error while deleting Profile'})
+    return res.status(400).json({ msg: 'Error while find Order'})
 }
 
 export const GetOrderById = async(req: Request, res: Response, next: NextFunction) => {
-    const customer = req.user;
+    const orderId = req.params.id;
  
-    if(customer){
-        
-        
+    if(orderId){
+        const order = await Order.findById(orderId).populate('items.food');
+        return res.status(200).json(order);
     }
-    return res.status(400).json({ msg: 'Error while deleting Profile'})
+    return res.status(404).json({ msg: "Error while find specific order" });
 }

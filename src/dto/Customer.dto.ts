@@ -37,7 +37,7 @@ export class EditCustomerProfileInput {
     address: string;
 }
 
-export class OrderInputs {
+export class CartItem {
 	_id: string;
 	unit: number;
 }
