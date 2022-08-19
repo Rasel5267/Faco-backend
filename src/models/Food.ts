@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface FoodDoc extends Document {
 	vendorId: string;
@@ -24,7 +24,7 @@ const FoodSchema = new Schema({
 	images: { type: [String] }
 },{
 	toJSON: {
-		transform(doc, ret){
+		transform(_doc, ret){
 			delete ret.createdAt,
 			delete ret.updatedAt
 		}
